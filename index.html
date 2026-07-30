@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>沙粒文字【老黑】</title>
+<title>文字消散【老黑】</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { width: 100%; height: 100%; overflow: hidden; background: #080814; cursor: none; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #160a05; cursor: none; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; }
   canvas { display: block; }
 
   /* 控制面板 */
@@ -70,17 +70,14 @@
 </style>
 </head>
 <body>
-  <!-- 呼吸光标 -->
   <div class="cursor-dot" id="cursorDot"></div>
 
-  <!-- 收起按钮 -->
   <button class="toggle-btn" id="toggleBtn" title="收起面板">
     <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
   </button>
 
-  <!-- 控制面板 -->
   <div class="control-panel" id="controlPanel">
-    <div class="panel-title">沙粒文字 / Sand Text</div>
+    <div class="panel-title">文字消散 / Text Dispersal</div>
 
     <div>
       <div class="param-label"><span>文字内容</span></div>
@@ -93,8 +90,8 @@
     </div>
 
     <div>
-      <div class="param-label"><span>字号</span><span class="param-value" id="fontSizeVal">200</span></div>
-      <input type="range" id="fontSize" min="100" max="500" value="200" step="10">
+      <div class="param-label"><span>字号</span><span class="param-value" id="fontSizeVal">260</span></div>
+      <input type="range" id="fontSize" min="100" max="500" value="260" step="10">
     </div>
 
     <div>
@@ -108,41 +105,51 @@
     </div>
 
     <div>
-      <div class="param-label"><span>风力强度</span><span class="param-value" id="windPowerVal">2.0</span></div>
-      <input type="range" id="windPower" min="0.5" max="5" value="2" step="0.1">
+      <div class="param-label"><span>风力强度</span><span class="param-value" id="windPowerVal">1.5</span></div>
+      <input type="range" id="windPower" min="0.3" max="4" value="1.5" step="0.1">
     </div>
 
     <div>
-      <div class="param-label"><span>沙粒生成率</span><span class="param-value" id="sandRateVal">8</span></div>
-      <input type="range" id="sandRate" min="1" max="25" value="8" step="1">
+      <div class="param-label"><span>粒子大小</span><span class="param-value" id="particleSizeVal">1.2</span></div>
+      <input type="range" id="particleSize" min="0.5" max="3" value="1.2" step="0.1">
     </div>
 
     <div>
-      <div class="param-label"><span>沙粒大小</span><span class="param-value" id="sandSizeVal">2.5</span></div>
-      <input type="range" id="sandSize" min="1" max="6" value="2.5" step="0.1">
+      <div class="param-label"><span>路径扰动（飘忽程度）</span><span class="param-value" id="turbulenceVal">0.7</span></div>
+      <input type="range" id="turbulence" min="0" max="2" value="0.7" step="0.1">
     </div>
 
     <div>
-      <div class="param-label"><span>吹散阈值（每字所需沙粒）</span><span class="param-value" id="thresholdVal">18</span></div>
-      <input type="range" id="threshold" min="5" max="60" value="18" step="1">
+      <div class="param-label"><span>加减速变化</span><span class="param-value" id="speedVarVal">1.0</span></div>
+      <input type="range" id="speedVar" min="0" max="2" value="1.0" step="0.1">
     </div>
 
     <div>
-      <div class="param-label"><span>最大沙粒数</span><span class="param-value" id="maxSandVal">2500</span></div>
-      <input type="range" id="maxSand" min="500" max="5000" value="2500" step="100">
+      <div class="param-label"><span>停留时间（开始消散前）</span><span class="param-value" id="stayTimeVal">80</span></div>
+      <input type="range" id="stayTime" min="0" max="300" value="80" step="10">
     </div>
 
     <div>
-      <div class="param-label"><span>循环间隔（帧）</span><span class="param-value" id="cyclePauseVal">120</span></div>
-      <input type="range" id="cyclePause" min="30" max="360" value="120" step="10">
+      <div class="param-label"><span>逐字间隔（帧）</span><span class="param-value" id="charIntervalVal">35</span></div>
+      <input type="range" id="charInterval" min="5" max="120" value="35" step="1">
+    </div>
+
+    <div>
+      <div class="param-label"><span>拖尾长度</span><span class="param-value" id="trailVal">6</span></div>
+      <input type="range" id="trail" min="1" max="15" value="6" step="1">
+    </div>
+
+    <div>
+      <div class="param-label"><span>循环间隔（帧）</span><span class="param-value" id="cyclePauseVal">100</span></div>
+      <input type="range" id="cyclePause" min="20" max="360" value="100" step="10">
     </div>
 
     <div>
       <div class="param-label"><span>配色预设</span></div>
       <div class="preset-row">
-        <button class="preset-btn active" data-preset="desert">沙漠</button>
+        <button class="preset-btn active" data-preset="ember">余烬</button>
+        <button class="preset-btn" data-preset="desert">沙漠</button>
         <button class="preset-btn" data-preset="aurora">极光</button>
-        <button class="preset-btn" data-preset="ember">余烬</button>
         <button class="preset-btn" data-preset="ocean">海洋</button>
       </div>
     </div>
@@ -150,14 +157,14 @@
     <div>
       <div class="param-label"><span>自定义颜色</span></div>
       <div class="color-row">
-        <div class="color-pick"><label>沙色</label><input type="color" id="c1Pick" value="#f4d35e"></div>
-        <div class="color-pick"><label>字色</label><input type="color" id="c2Pick" value="#ee964b"></div>
-        <div class="color-pick"><label>背景</label><input type="color" id="bgPick" value="#1a0f08"></div>
+        <div class="color-pick"><label>字色</label><input type="color" id="c1Pick" value="#ff7a45"></div>
+        <div class="color-pick"><label>飞散色</label><input type="color" id="c2Pick" value="#f4eedc"></div>
+        <div class="color-pick"><label>背景</label><input type="color" id="bgPick" value="#160a05"></div>
       </div>
     </div>
 
     <button class="save-btn" id="saveBtn">保存为 PNG</button>
-    <button class="reset-btn" id="resetBtn">重置场景</button>
+    <button class="reset-btn" id="resetBtn">立即重新消散</button>
   </div>
 
   <!-- 底部挂件 -->
@@ -169,7 +176,6 @@
   </div>
   <button class="bottom-expand" id="showLinksBtn"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
 
-  <!-- 公众号弹窗 -->
   <div class="info-modal" id="infoModal">
     <div class="info-box">
       <div class="info-label">微信公众号</div>
@@ -185,77 +191,76 @@
   <script>
   // ===== 配置 =====
   const presets = {
-    desert: { c1: '#f4d35e', c2: '#ee964b', bg: '#1a0f08' },
-    aurora: { c1: '#7afcff', c2: '#ff7af0', bg: '#080814' },
-    ember:  { c1: '#ff7a45', c2: '#f4eedc', bg: '#160a05' },
-    ocean:  { c1: '#34d4ff', c2: '#7c5cff', bg: '#050a18' }
+    ember:  { c1: '#ff7a45', c2: '#f4eedc', bg: '#160a05' }, // 余烬：橙字→白灰 默认
+    desert: { c1: '#f4d35e', c2: '#ee964b', bg: '#1a0f08' }, // 沙漠：沙金→橙
+    aurora: { c1: '#7afcff', c2: '#ff7af0', bg: '#080814' }, // 极光：青→粉
+    ocean:  { c1: '#34d4ff', c2: '#7c5cff', bg: '#050a18' }  // 海洋：青→紫
   };
 
   const cfg = {
     text: '黑白间设计',
     fontName: '',
-    fontSize: 200,
+    fontSize: 260,
     windDir: 'right',
-    windPower: 2,
-    sandRate: 8,
-    sandSize: 2.5,
-    threshold: 18,
-    maxSand: 2500,
-    cyclePause: 120,
-    c1: presets.desert.c1,
-    c2: presets.desert.c2,
-    bg: presets.desert.bg
+    windPower: 1.5,
+    particleSize: 1.2,
+    turbulence: 0.7,
+    speedVar: 1.0,
+    stayTime: 80,
+    charInterval: 35,
+    trail: 6,
+    cyclePause: 100,
+    c1: presets.ember.c1,
+    c2: presets.ember.c2,
+    bg: presets.ember.bg
   };
 
   let c1, c2;
-  let bgRgb = [26, 15, 8];
-  let windVec = { x: 2, y: 0 };
+  let bgRgb = [22, 10, 5];
+  let windVec = { x: 1.5, y: 0 };
+  let eraseAlpha = 0.12;
 
   // ===== 文字数据 =====
-  let pg;                // 离屏文字缓存
-  let alphaGrid;         // Uint8Array，每像素存 charIdx+1（0=空）
-  let chars = [];        // 字符块
-  let blowOrder = [];    // 吹散顺序
+  let pg;
+  let alphaGrid;          // 此版本不再用于碰撞，仅保留字符像素归属
+  let chars = [];         // 字符块
+  let blowOrder = [];     // 消散顺序
   let blowIndex = 0;
-  let cycleComplete = false;
-  let cycleTimer = 0;
+  let phase = 'show';     // show | dispersing | done
+  let showTimer = 0;
+  let doneTimer = 0;
+  let charBlowTimer = 0;  // 逐字间隔计时
 
-  // ===== 沙粒 =====
-  let sands = [];
-  let flyingGlyphPixels = [];
+  // 飞行粒子（文字像素转化）
+  let particles = [];
+  let globalT = 0;        // 全局噪声时间
 
   // ===== p5 =====
   function setup() {
     const cnv = createCanvas(windowWidth, windowHeight);
-    cnv.elt.addEventListener('pointerdown', () => {}); // 占位，避免全局 mousePressed
+    cnv.elt.addEventListener('pointerdown', () => {});
     colorMode(RGB, 255, 255, 255, 1);
+    noiseDetail(2, 0.5);
     updateColors();
     textFont('sans-serif');
     computeText();
   }
 
   function draw() {
-    // 半透明背景擦除（轻微拖尾）
+    globalT += 0.008;
+
+    // 半透明背景擦除（拖尾）
     noStroke();
-    fill(bgRgb[0], bgRgb[1], bgRgb[2], 0.22);
+    fill(bgRgb[0], bgRgb[1], bgRgb[2], eraseAlpha);
     rect(0, 0, width, height);
 
     updateWindVec();
-    spawnSand();
+    updatePhase();
+    updateParticles();
 
-    // 更新沙粒
-    for (let i = sands.length - 1; i >= 0; i--) {
-      sands[i].update();
-      if (sands[i].life <= 0) sands.splice(i, 1);
-    }
-
-    updateBlow();
-    updateFlyingGlyphPixels();
-
-    // 绘制：文字（未吹散）→ 飞行文字像素 → 沙粒
+    // 绘制：未消散文字 → 飞行粒子
     drawGlyph();
-    drawFlyingGlyph();
-    for (const s of sands) s.display();
+    drawParticles();
   }
 
   function windowResized() {
@@ -269,6 +274,7 @@
     c1 = color(cfg.c1);
     c2 = color(cfg.c2);
     bgRgb = hexToRgb(cfg.bg);
+    eraseAlpha = map(cfg.trail, 1, 15, 0.28, 0.04);
   }
   function hexToRgb(hex) {
     return [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)];
@@ -299,7 +305,6 @@
     if (cfg.fontName) pg.textFont(cfg.fontName);
     else pg.textFont('sans-serif');
 
-    // 测量每个字符宽度
     const ctx = pg.drawingContext;
     const fontStr = `bold ${cfg.fontSize}px ${cfg.fontName || 'sans-serif'}`;
     ctx.font = fontStr;
@@ -317,43 +322,33 @@
         cx: cx + w / 2,
         cy: cy,
         w: w,
-        sandCount: 0,
-        blown: false
+        leftX: cx,
+        blown: false,
+        blowFrame: 0,
+        pixels: []
       });
       cx += w;
     }
 
-    // 画整段文字到 pg
     pg.text(txt, width / 2, height / 2);
     pg.loadPixels();
 
-    // 建 alphaGrid + 字符像素
     alphaGrid = new Uint8Array(width * height);
-    const step = 4;
+    const step = 3;
     for (const ch of chars) ch.pixels = [];
 
     for (let y = 0; y < height; y += step) {
       for (let x = 0; x < width; x += step) {
         const idx = (y * width + x) * 4;
         if (pg.pixels[idx + 3] > 128) {
-          // 找属于哪个字符（按 x 范围）
           let charIdx = -1;
           for (let c = 0; c < chars.length; c++) {
-            const left = chars[c].cx - chars[c].w / 2;
-            const right = chars[c].cx + chars[c].w / 2;
+            const left = chars[c].leftX;
+            const right = chars[c].leftX + chars[c].w;
             if (x >= left && x <= right) { charIdx = c; break; }
           }
           if (charIdx >= 0) {
-            chars[charIdx].pixels.push({ x: x, y: y, alive: true, vx: 0, vy: 0 });
-            // 标记 alphaGrid（覆盖 step×step 块）
-            for (let dy = 0; dy < step; dy++) {
-              for (let dx = 0; dx < step; dx++) {
-                const px = x + dx, py = y + dy;
-                if (px >= 0 && px < width && py >= 0 && py < height) {
-                  alphaGrid[py * width + px] = charIdx + 1;
-                }
-              }
-            }
+            chars[charIdx].pixels.push({ x: x, y: y, alive: true });
           }
         }
       }
@@ -361,17 +356,17 @@
 
     computeBlowOrder();
     blowIndex = 0;
-    cycleComplete = false;
-    cycleTimer = 0;
-    sands = [];
-    flyingGlyphPixels = [];
+    phase = 'show';
+    showTimer = 0;
+    doneTimer = 0;
+    charBlowTimer = 0;
+    particles = [];
   }
 
   function computeBlowOrder() {
     blowOrder = chars.map((_, i) => i);
     const dir = cfg.windDir;
     blowOrder.sort((a, b) => {
-      // 迎风面先吹散：风往右吹，左侧先积累满
       if (dir === 'right') return chars[a].cx - chars[b].cx;
       if (dir === 'left')  return chars[b].cx - chars[a].cx;
       if (dir === 'up')    return chars[b].cy - chars[a].cy;
@@ -380,166 +375,149 @@
     });
   }
 
-  // 快速查询：返回 charIdx+1（0=空或已吹散）
-  function sampleAlpha(x, y) {
-    x = Math.floor(x); y = Math.floor(y);
-    if (x < 0 || x >= width || y < 0 || y >= height) return 0;
-    const v = alphaGrid[y * width + x];
-    if (v === 0) return 0;
-    if (chars[v - 1].blown) return 0;
-    return v;
+  // ===== 消散时序 =====
+  function updatePhase() {
+    if (phase === 'show') {
+      showTimer++;
+      if (showTimer >= cfg.stayTime) {
+        phase = 'dispersing';
+        charBlowTimer = 0;
+        triggerCharBlow();
+      }
+    } else if (phase === 'dispersing') {
+      charBlowTimer++;
+      if (charBlowTimer >= cfg.charInterval) {
+        charBlowTimer = 0;
+        blowIndex++;
+        if (blowIndex >= blowOrder.length) {
+          phase = 'done';
+          doneTimer = 0;
+        } else {
+          triggerCharBlow();
+        }
+      }
+    } else if (phase === 'done') {
+      doneTimer++;
+      // 等粒子基本飞完 + 循环间隔
+      if (doneTimer >= cfg.cyclePause && particles.length < 30) {
+        computeText();
+      }
+    }
   }
 
-  // ===== 沙粒类 =====
-  class Sand {
-    constructor(x, y) {
-      this.x = x;
-      this.y = y;
-      this.vx = windVec.x * random(0.4, 1.2) + random(-0.3, 0.3);
-      this.vy = windVec.y * random(0.4, 1.2) + random(-0.3, 0.3);
-      this.size = cfg.sandSize * random(0.7, 1.3);
+  // 触发某字符消散：像素按迎风位置波次激活
+  function triggerCharBlow() {
+    if (blowIndex >= blowOrder.length) return;
+    const charIdx = blowOrder[blowIndex];
+    const ch = chars[charIdx];
+    if (ch.blown) return;
+    ch.blown = true;
+
+    // 迎风侧归一化位置 0~1（风往右吹，左侧 0 先飞）
+    const dir = cfg.windDir;
+    let minP = Infinity, maxP = -Infinity;
+    for (const px of ch.pixels) {
+      let p;
+      if (dir === 'right' || dir === 'left') p = px.x;
+      else p = px.y;
+      if (p < minP) minP = p;
+      if (p > maxP) maxP = p;
+    }
+    const range = Math.max(1, maxP - minP);
+
+    for (const px of ch.pixels) {
+      if (!px.alive) continue;
+      px.alive = false;
+      let posVal;
+      if (dir === 'right') posVal = px.x;        // 左小先飞
+      else if (dir === 'left') posVal = -px.x;   // 右大→负小先飞
+      else if (dir === 'up') posVal = px.y;       // 下大先飞? up=风往上，下方先飞
+      else posVal = -px.y;                         // down=风往下，上方先飞
+      const norm = (posVal - (dir === 'right' || dir === 'up' ? minP : -maxP)) / range;
+      const delay = Math.max(0, Math.min(1, norm)) * 18; // 0~18 帧延迟
+
+      // 颜色：字色→飞散色渐变
       const t = random();
       const r = lerp(red(c1), red(c2), t);
       const g = lerp(green(c1), green(c2), t);
       const b = lerp(blue(c1), blue(c2), t);
-      this.col = [r, g, b];
-      this.settled = false;
-      this.settledChar = -1;
-      this.life = 1;
-    }
 
-    update() {
-      if (this.settled) return;
-      // 风力加速
-      this.vx += windVec.x * 0.08;
-      this.vy += windVec.y * 0.08;
+      particles.push({
+        x: px.x,
+        y: px.y,
+        vx: windVec.x * random(0.2, 0.8),
+        vy: windVec.y * random(0.2, 0.8),
+        size: cfg.particleSize * random(0.7, 1.3),
+        col: [r, g, b],
+        delay: delay,
+        activated: false,
+        life: 1,
+        seed: random(1000),
+        t: random(100)
+      });
+    }
+  }
+
+  // ===== 粒子更新（加减速 + 路径扰动）=====
+  function updateParticles() {
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+
+      // 延迟激活
+      if (!p.activated) {
+        p.delay -= 1;
+        if (p.delay <= 0) {
+          p.activated = true;
+          // 激活时给一个初始冲量
+          p.vx += windVec.x * random(0.3, 0.8);
+          p.vy += windVec.y * random(0.3, 0.8);
+        }
+        continue;
+      }
+
+      // 风力加速（基础）
+      p.vx += windVec.x * 0.05;
+      p.vy += windVec.y * 0.05;
+
+      // 路径扰动：Perlin 噪声给垂直于风向的扰动
+      const turb = cfg.turbulence;
+      if (turb > 0.01) {
+        const n = noise(p.x * 0.006, p.y * 0.006, p.seed + globalT);
+        const ang = n * TAU * 1.8;
+        p.vx += Math.cos(ang) * turb * 0.12;
+        p.vy += Math.sin(ang) * turb * 0.12;
+      }
+
+      // 加减速：用噪声调制速度倍率（时快时慢）
+      const spdMod = 1.0 + (noise(p.t, globalT * 2) - 0.5) * 2 * cfg.speedVar;
+      const clampMod = Math.max(0.2, Math.min(2.2, spdMod));
+
       // 阻尼
-      this.vx *= 0.96;
-      this.vy *= 0.96;
+      p.vx *= 0.965;
+      p.vy *= 0.965;
+
       // 限速
-      const sp = Math.hypot(this.vx, this.vy);
-      const maxSp = cfg.windPower * 3.5;
+      const sp = Math.hypot(p.vx, p.vy);
+      const maxSp = cfg.windPower * 4 + 2;
       if (sp > maxSp) {
-        this.vx = this.vx / sp * maxSp;
-        this.vy = this.vy / sp * maxSp;
+        p.vx = p.vx / sp * maxSp;
+        p.vy = p.vy / sp * maxSp;
       }
 
-      const nx = this.x + this.vx;
-      const ny = this.y + this.vy;
+      p.x += p.vx * clampMod;
+      p.y += p.vy * clampMod;
+      p.t += 0.03;
 
-      if (nx < -20 || nx > width + 20 || ny < -20 || ny > height + 20) {
-        this.life = 0;
-        return;
-      }
-
-      const curV = sampleAlpha(this.x, this.y);
-      const nextV = sampleAlpha(nx, ny);
-
-      if (curV === 0 && nextV > 0) {
-        // 撞到文字迎风面 → 堆积在碰撞点前
-        this.settled = true;
-        this.settledChar = nextV - 1;
-        chars[this.settledChar].sandCount++;
-        // 停在当前像素边缘（迎风侧），加一点垂直随机偏移让堆积有厚度
-        this.x = this.x + random(-1, 1);
-        this.y = this.y + random(-1, 1);
-        this.vx = 0; this.vy = 0;
+      // 生命淡出（飞远了渐隐）
+      const margin = 60;
+      if (p.x < -margin || p.x > width + margin || p.y < -margin || p.y > height + margin) {
+        p.life -= 0.04;
       } else {
-        this.x = nx;
-        this.y = ny;
+        p.life -= 0.0015;
       }
-    }
 
-    blow() {
-      this.settled = false;
-      this.vx = windVec.x * random(1.5, 3.5) + random(-1, 1);
-      this.vy = windVec.y * random(1.5, 3.5) + random(-1, 1);
-    }
-
-    display() {
-      noStroke();
-      fill(this.col[0], this.col[1], this.col[2], 0.88);
-      circle(this.x, this.y, this.size);
-    }
-  }
-
-  // ===== 沙粒生成 =====
-  function spawnSand() {
-    if (cycleComplete) return;
-    if (sands.length >= cfg.maxSand) return;
-    const rate = cfg.sandRate;
-    for (let i = 0; i < rate; i++) {
-      let x, y;
-      const m = 10;
-      switch (cfg.windDir) {
-        case 'right': x = -m; y = random(0, height); break;
-        case 'left':  x = width + m; y = random(0, height); break;
-        case 'up':    x = random(0, width); y = height + m; break;
-        case 'down':  x = random(0, width); y = -m; break;
-      }
-      sands.push(new Sand(x, y));
-    }
-  }
-
-  // ===== 吹散逻辑 =====
-  function updateBlow() {
-    if (cycleComplete) {
-      cycleTimer++;
-      if (cycleTimer > cfg.cyclePause) {
-        // 重新生成文字，循环
-        computeText();
-      }
-      return;
-    }
-
-    if (blowIndex >= blowOrder.length) {
-      // 所有字都吹散了，等沙粒也飞完
-      cycleComplete = true;
-      cycleTimer = 0;
-      return;
-    }
-
-    const charIdx = blowOrder[blowIndex];
-    const ch = chars[charIdx];
-
-    if (ch.blown) {
-      blowIndex++;
-      return;
-    }
-
-    if (ch.sandCount >= cfg.threshold) {
-      // 触发吹散
-      ch.blown = true;
-      for (const px of ch.pixels) {
-        if (px.alive) {
-          px.alive = false;
-          px.vx = windVec.x * random(1.5, 4) + random(-1.5, 1.5);
-          px.vy = windVec.y * random(1.5, 4) + random(-1.5, 1.5);
-          flyingGlyphPixels.push(px);
-        }
-      }
-      // 堆积在该字符的沙粒也飞走
-      for (const s of sands) {
-        if (s.settled && s.settledChar === charIdx) {
-          s.blow();
-        }
-      }
-      blowIndex++;
-    }
-  }
-
-  // ===== 飞行文字像素 =====
-  function updateFlyingGlyphPixels() {
-    for (let i = flyingGlyphPixels.length - 1; i >= 0; i--) {
-      const p = flyingGlyphPixels[i];
-      p.vx += windVec.x * 0.12 + random(-0.08, 0.08);
-      p.vy += windVec.y * 0.12 + random(-0.08, 0.08);
-      p.vx *= 0.985;
-      p.vy *= 0.985;
-      p.x += p.vx;
-      p.y += p.vy;
-      if (p.x < -30 || p.x > width + 30 || p.y < -30 || p.y > height + 30) {
-        flyingGlyphPixels.splice(i, 1);
+      if (p.life <= 0) {
+        particles.splice(i, 1);
       }
     }
   }
@@ -547,7 +525,7 @@
   // ===== 绘制 =====
   function drawGlyph() {
     noStroke();
-    fill(red(c2), green(c2), blue(c2), 0.92);
+    fill(red(c1), green(c1), blue(c1), 0.95);
     textAlign(CENTER, CENTER);
     textStyle(BOLD);
     textSize(cfg.fontSize);
@@ -560,18 +538,18 @@
     }
   }
 
-  function drawFlyingGlyph() {
+  function drawParticles() {
     noStroke();
-    fill(red(c2), green(c2), blue(c2), 0.9);
-    const s = 3;
-    for (const p of flyingGlyphPixels) {
-      rect(p.x - s/2, p.y - s/2, s, s);
+    for (const p of particles) {
+      if (!p.activated) continue;
+      const a = p.life * 0.9;
+      fill(p.col[0], p.col[1], p.col[2], a);
+      circle(p.x, p.y, p.size);
     }
   }
 
   // ===== UI 绑定 =====
   function bindUI() {
-    // 文字
     const textInput = document.getElementById('textInput');
     textInput.addEventListener('input', () => {
       cfg.text = textInput.value;
@@ -579,7 +557,6 @@
       background(bgRgb[0], bgRgb[1], bgRgb[2]);
     });
 
-    // 字体上传
     const fontFile = document.getElementById('fontFile');
     fontFile.addEventListener('change', (e) => {
       const file = e.target.files[0];
@@ -598,7 +575,6 @@
       reader.readAsDataURL(file);
     });
 
-    // 滑块通用绑定
     const bindSlider = (id, key, valId, fmt) => {
       const el = document.getElementById(id);
       const valEl = document.getElementById(valId);
@@ -609,28 +585,33 @@
           computeText();
           background(bgRgb[0], bgRgb[1], bgRgb[2]);
         }
+        if (key === 'trail') {
+          updateColors();
+        }
       });
     };
     bindSlider('fontSize', 'fontSize', 'fontSizeVal');
     bindSlider('windPower', 'windPower', 'windPowerVal', v => v.toFixed(1));
-    bindSlider('sandRate', 'sandRate', 'sandRateVal');
-    bindSlider('sandSize', 'sandSize', 'sandSizeVal', v => v.toFixed(1));
-    bindSlider('threshold', 'threshold', 'thresholdVal');
-    bindSlider('maxSand', 'maxSand', 'maxSandVal');
+    bindSlider('particleSize', 'particleSize', 'particleSizeVal', v => v.toFixed(1));
+    bindSlider('turbulence', 'turbulence', 'turbulenceVal', v => v.toFixed(1));
+    bindSlider('speedVar', 'speedVar', 'speedVarVal', v => v.toFixed(1));
+    bindSlider('stayTime', 'stayTime', 'stayTimeVal');
+    bindSlider('charInterval', 'charInterval', 'charIntervalVal');
+    bindSlider('trail', 'trail', 'trailVal');
     bindSlider('cyclePause', 'cyclePause', 'cyclePauseVal');
 
-    // 风向按钮
     document.querySelectorAll('.direction-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.direction-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         cfg.windDir = btn.dataset.dir;
         computeBlowOrder();
-        blowIndex = 0;
+        // 风向改变：立即重新开始消散流程
+        computeText();
+        background(bgRgb[0], bgRgb[1], bgRgb[2]);
       });
     });
 
-    // 预设
     document.querySelectorAll('.preset-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
@@ -645,7 +626,6 @@
       });
     });
 
-    // 取色器
     const bindColor = (id, key) => {
       document.getElementById(id).addEventListener('input', (e) => {
         cfg[key] = e.target.value;
@@ -658,18 +638,15 @@
     bindColor('c2Pick', 'c2');
     bindColor('bgPick', 'bg');
 
-    // 保存 PNG
     document.getElementById('saveBtn').addEventListener('click', () => {
-      saveCanvas('sand-text', 'png');
+      saveCanvas('text-dispersal', 'png');
     });
 
-    // 重置
     document.getElementById('resetBtn').addEventListener('click', () => {
       computeText();
       background(bgRgb[0], bgRgb[1], bgRgb[2]);
     });
 
-    // 收起面板
     const panel = document.getElementById('controlPanel');
     const toggleBtn = document.getElementById('toggleBtn');
     let collapsed = false;
@@ -678,7 +655,6 @@
       panel.classList.toggle('collapsed', collapsed);
     });
 
-    // 底部挂件
     const bottomLinks = document.getElementById('bottomLinks');
     const showLinksBtn = document.getElementById('showLinksBtn');
     document.getElementById('hideLinksBtn').addEventListener('click', () => {
@@ -697,25 +673,21 @@
       infoModal.classList.remove('show');
     });
 
-    // 呼吸光标
     const cursorDot = document.getElementById('cursorDot');
     window.addEventListener('pointermove', (e) => {
       cursorDot.style.left = e.clientX + 'px';
       cursorDot.style.top = e.clientY + 'px';
     });
-    // UI 上隐藏自定义光标，恢复系统指针
     document.querySelectorAll('.control-panel, .toggle-btn, .bottom-links, .bottom-expand, .info-modal').forEach(el => {
       el.addEventListener('pointerenter', () => cursorDot.classList.add('hide'));
       el.addEventListener('pointerleave', () => cursorDot.classList.remove('hide'));
     });
   }
 
-  // p5 全局钩子
   window.setup = setup;
   window.draw = draw;
   window.windowResized = windowResized;
 
-  // DOM ready 后绑定 UI
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', bindUI);
   } else {
