@@ -234,14 +234,14 @@
   const presets = {
     feixue: { c1: '#ffffff', c2: '#ff9ef2', bg: '#030014', mono: false }, // 飞雪：白字→粉，深紫黑底（默认）
     ember:  { c1: '#ff7a45', c2: '#f4eedc', bg: '#160a05', mono: false }, // 余烬：橙字→白灰
-    aurora: { c1: '#7afcff', c2: '#ff7af0', bg: '#080814', mono: true  }  // 极光：青字→粉（粒子单色）
+    aurora: { c1: '#7afcff', c2: '#ff7af0', bg: '#080814', mono: false }  // 极光：青字→粉（默认渐变）
   };
 
   const cfg = {
     text: 'heip',
     fontName: '',
     fontSize: 300,
-    windAngle: 0,        // 度，0=东(右), 90=南(下), 180=西(左), 270=北(上)
+    windAngle: 327,      // 度，0=东(右), 90=南(下), 180=西(左), 270=北(上)；327≈北偏东
     windPower: 4,
     particleSize: 1.2,
     density: 6,
@@ -285,6 +285,7 @@
     noiseDetail(2, 0.5);
     glyphPg = createGraphics(width, height);
     glyphPg.pixelDensity(1);
+    glyphPg.colorMode(RGB, 255, 255, 255, 1);  // 关键：graphics 不继承主画布 colorMode，必须显式设
     updateColors();
     updatePixelStep();
     textFont('sans-serif');
@@ -311,6 +312,7 @@
     resizeCanvas(windowWidth, windowHeight);
     glyphPg = createGraphics(width, height);
     glyphPg.pixelDensity(1);
+    glyphPg.colorMode(RGB, 255, 255, 255, 1);
     computeText();
     background(bgRgb[0], bgRgb[1], bgRgb[2]);
   }
@@ -723,6 +725,7 @@
     });
     windDial.addEventListener('pointerup', () => { dragging = false; });
     windDial.addEventListener('pointercancel', () => { dragging = false; });
+    setWindAngle(cfg.windAngle);  // 初始化指针角度与显示
 
     // 预设
     document.querySelectorAll('.preset-btn').forEach(btn => {
