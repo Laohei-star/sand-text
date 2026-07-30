@@ -612,20 +612,29 @@
     if (cfg.fontName) glyphPg.textFont(cfg.fontName);
     else glyphPg.textFont('sans-serif');
     glyphPg.fill(red(c1), green(c1), blue(c1), 0.95);
+    // 关键修复：只画"还有未激活像素"的 blown 字
+    // 已 fully activated 的字不画，避免点击后面字时前面字出现残影
     for (const ch of chars) {
       if (ch.blown) {
-        glyphPg.text(ch.char, ch.cx, ch.cy);
+        let hasUnactivated = false;
+        for (const px of ch.pixels) {
+          if (!px.activated) { hasUnactivated = true; break; }
+        }
+        if (hasUnactivated) {
+          glyphPg.text(ch.char, ch.cx, ch.cy);
+        }
       }
     }
-    // erase 挖洞：在已激活（已飞走）的像素位置擦除
+
+    // erase 挖洞：用方形 rect 完全覆盖采样块（圆形会有缝隙导致边缘碎块）
+    // rect 稍微大一点（step+1）覆盖矢量字边缘抗锯齿
     glyphPg.erase();
-    const half = pixelStep / 2;
-    const er = pixelStep * 0.9;  // 擦除半径，略小于步长避免过度侵蚀相邻未飞像素
+    const er = pixelStep + 1;
     for (const ch of chars) {
       if (ch.blown) {
         for (const px of ch.pixels) {
           if (px.activated) {
-            glyphPg.circle(px.x + half, px.y + half, er * 2);
+            glyphPg.rect(px.x, px.y, er, er);
           }
         }
       }
