@@ -385,7 +385,7 @@
     for (let y = 0; y < height; y += step) {
       for (let x = 0; x < width; x += step) {
         const idx = (y * width + x) * 4;
-        if (pg.pixels[idx + 3] > 128) {
+        if (pg.pixels[idx + 3] > 64) {   // 阈值 64（非 128）：采样矢量字边缘抗锯齿，erase 能覆盖
           let charIdx = -1;
           for (let c = 0; c < chars.length; c++) {
             const left = chars[c].leftX;
@@ -605,6 +605,26 @@
     if (!hasBlownRemain) return;
 
     glyphPg.clear();
+    const ctx = glyphPg.drawingContext;
+    ctx.save();
+    // clip 到未激活像素区域：用圆形（边缘平滑圆润）而非方形（锯齿）
+    // 相邻圆形半径 step*0.65、中心距 step，重叠 step*0.3 无缝隙
+    ctx.beginPath();
+    const r = pixelStep * 0.65;
+    for (const ch of chars) {
+      if (ch.blown) {
+        for (const px of ch.pixels) {
+          if (!px.activated) {
+            const ccx = px.x + pixelStep / 2;
+            const ccy = px.y + pixelStep / 2;
+            ctx.moveTo(ccx + r, ccy);
+            ctx.arc(ccx, ccy, r, 0, Math.PI * 2);
+          }
+        }
+      }
+    }
+    ctx.clip();
+    // 在 clip 区域内画矢量字
     glyphPg.noStroke();
     glyphPg.textAlign(CENTER, CENTER);
     glyphPg.textStyle(BOLD);
@@ -612,8 +632,7 @@
     if (cfg.fontName) glyphPg.textFont(cfg.fontName);
     else glyphPg.textFont('sans-serif');
     glyphPg.fill(red(c1), green(c1), blue(c1), 0.95);
-    // 关键修复：只画"还有未激活像素"的 blown 字
-    // 已 fully activated 的字不画，避免点击后面字时前面字出现残影
+    // 只画"还有未激活像素"的 blown 字，避免已 fully activated 字残影
     for (const ch of chars) {
       if (ch.blown) {
         let hasUnactivated = false;
@@ -625,21 +644,7 @@
         }
       }
     }
-
-    // erase 挖洞：用方形 rect 完全覆盖采样块（圆形会有缝隙导致边缘碎块）
-    // rect 稍微大一点（step+1）覆盖矢量字边缘抗锯齿
-    glyphPg.erase();
-    const er = pixelStep + 1;
-    for (const ch of chars) {
-      if (ch.blown) {
-        for (const px of ch.pixels) {
-          if (px.activated) {
-            glyphPg.rect(px.x, px.y, er, er);
-          }
-        }
-      }
-    }
-    glyphPg.noErase();
+    ctx.restore();
     image(glyphPg, 0, 0);
   }
 
