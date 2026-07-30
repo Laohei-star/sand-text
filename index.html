@@ -393,7 +393,7 @@
             if (x >= left && x <= right) { charIdx = c; break; }
           }
           if (charIdx >= 0) {
-            chars[charIdx].pixels.push({ x: x, y: y, activated: false });
+            chars[charIdx].pixels.push({ x: x, y: y, activated: false, alpha: pg.pixels[idx + 3] });
           }
         }
       }
@@ -451,7 +451,15 @@
       const proj = px.x * cosD + px.y * sinD;
       // 迎风侧 proj 小 → norm 小 → delay 小 → 先飞
       const norm = (proj - minProj) / range;
-      const delay = norm * 45;  // 0~45 帧波次延迟，渐进剥离
+      // 边缘像素（alpha 低）立即飞（delay 0-6），掩盖点击瞬间 clip 边缘与字边缘的差异
+      // 内部像素按迎风波次延迟 8-50 帧，渐进剥离（迎风侧 8 帧先飞，背风侧 50 帧后飞）
+      // 视觉上：点击瞬间字轮廓炸开一圈粒子（边缘飞），然后内部从迎风侧逐渐剥离
+      let delay;
+      if (px.alpha < 160) {
+        delay = random(0, 6);  // 边缘：立即飞
+      } else {
+        delay = 8 + norm * 40 + random(0, 5);  // 内部：8-50 帧渐进
+      }
 
       // 颜色
       let col;
@@ -462,11 +470,15 @@
         col = [lerp(red(c1), red(c2), t), lerp(green(c1), green(c2), t), lerp(blue(c1), blue(c2), t)];
       }
 
+      // 边缘粒子给更大初始速度（"炸开"感）
+      const isEdge = px.alpha < 160;
+      const speedMul = isEdge ? random(0.6, 1.4) : random(0.15, 0.6);
+
       particles.push({
         x: px.x,
         y: px.y,
-        vx: windVec.x * random(0.15, 0.6),
-        vy: windVec.y * random(0.15, 0.6),
+        vx: windVec.x * speedMul + (isEdge ? random(-1, 1) : 0),
+        vy: windVec.y * speedMul + (isEdge ? random(-1, 1) : 0),
         size: cfg.particleSize * random(0.7, 1.3),
         col: col,
         delay: delay,
