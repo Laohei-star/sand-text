@@ -6,7 +6,7 @@
 <title>文字消散【老黑】</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { width: 100%; height: 100%; overflow: hidden; background: #160a05; cursor: none; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #030014; cursor: none; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; }
   canvas { display: block; }
 
   /* 控制面板 */
@@ -104,12 +104,12 @@
   </button>
 
   <div class="control-panel" id="controlPanel">
-    <div class="panel-title">文字消散 / Text Dispersal</div>
+    <div class="panel-title">文字消散【老黑】</div>
     <div class="panel-hint">点击画布上的文字即可触发该字消散</div>
 
     <div>
       <div class="param-label"><span>文字内容</span></div>
-      <input type="text" id="textInput" class="text-input" value="黑白间设计" maxlength="12">
+      <input type="text" id="textInput" class="text-input" value="heip" maxlength="12">
     </div>
 
     <div>
@@ -171,16 +171,11 @@
     </div>
 
     <div>
-      <div class="param-label"><span>循环间隔（帧）</span><span class="param-value" id="cyclePauseVal">100</span></div>
-      <input type="range" id="cyclePause" min="20" max="360" value="100" step="10">
-    </div>
-
-    <div>
       <div class="param-label"><span>配色预设</span></div>
       <div class="preset-row">
-        <button class="preset-btn active" data-preset="ember">余烬</button>
+        <button class="preset-btn active" data-preset="feixue">飞雪</button>
+        <button class="preset-btn" data-preset="ember">余烬</button>
         <button class="preset-btn" data-preset="aurora">极光</button>
-        <button class="preset-btn" data-preset="ocean">海洋</button>
       </div>
     </div>
 
@@ -192,9 +187,9 @@
     <div>
       <div class="param-label"><span>自定义颜色</span></div>
       <div class="color-row">
-        <div class="color-pick"><label>字色</label><input type="color" id="c1Pick" value="#ff7a45"></div>
-        <div class="color-pick"><label>飞散色</label><input type="color" id="c2Pick" value="#f4eedc"></div>
-        <div class="color-pick"><label>背景</label><input type="color" id="bgPick" value="#160a05"></div>
+        <div class="color-pick"><label>字色</label><input type="color" id="c1Pick" value="#ffffff"></div>
+        <div class="color-pick"><label>飞散色</label><input type="color" id="c2Pick" value="#ff9ef2"></div>
+        <div class="color-pick"><label>背景</label><input type="color" id="bgPick" value="#030014"></div>
       </div>
     </div>
 
@@ -237,13 +232,13 @@
   <script>
   // ===== 配置 =====
   const presets = {
+    feixue: { c1: '#ffffff', c2: '#ff9ef2', bg: '#030014', mono: false }, // 飞雪：白字→粉，深紫黑底（默认）
     ember:  { c1: '#ff7a45', c2: '#f4eedc', bg: '#160a05', mono: false }, // 余烬：橙字→白灰
-    aurora: { c1: '#7afcff', c2: '#ff7af0', bg: '#080814', mono: true  }, // 极光：青字→粉（粒子单色）
-    ocean:  { c1: '#34d4ff', c2: '#7c5cff', bg: '#050a18', mono: false }  // 海洋：青→紫
+    aurora: { c1: '#7afcff', c2: '#ff7af0', bg: '#080814', mono: true  }  // 极光：青字→粉（粒子单色）
   };
 
   const cfg = {
-    text: '黑白间设计',
+    text: 'heip',
     fontName: '',
     fontSize: 300,
     windAngle: 0,        // 度，0=东(右), 90=南(下), 180=西(左), 270=北(上)
@@ -253,21 +248,22 @@
     turbulence: 0.8,
     speedVar: 1.0,
     trail: 6,
-    cyclePause: 100,
     mono: false,
-    c1: presets.ember.c1,
-    c2: presets.ember.c2,
-    bg: presets.ember.bg
+    c1: presets.feixue.c1,
+    c2: presets.feixue.c2,
+    bg: presets.feixue.bg
   };
 
   let c1, c2;
-  let bgRgb = [22, 10, 5];
+  let bgRgb = [3, 0, 20];
   let windVec = { x: 4, y: 0 };
   let eraseAlpha = 0.12;
   let pixelStep = 3;   // 文字像素采样步长（由 density 决定）
+  const CYCLE_PAUSE = 100;  // 循环间隔（固定，不暴露滑块）
 
   // ===== 文字数据 =====
   let pg;
+  let glyphPg;          // blown 字的矢量缓存 + erase 挖洞用
   let chars = [];
   let particles = [];
   let globalT = 0;
@@ -287,6 +283,8 @@
     cnv.elt.addEventListener('pointerdown', onCanvasPointerDown);
     colorMode(RGB, 255, 255, 255, 1);
     noiseDetail(2, 0.5);
+    glyphPg = createGraphics(width, height);
+    glyphPg.pixelDensity(1);
     updateColors();
     updatePixelStep();
     textFont('sans-serif');
@@ -311,6 +309,8 @@
 
   function windowResized() {
     resizeCanvas(windowWidth, windowHeight);
+    glyphPg = createGraphics(width, height);
+    glyphPg.pixelDensity(1);
     computeText();
     background(bgRgb[0], bgRgb[1], bgRgb[2]);
   }
@@ -511,7 +511,7 @@
       }
     } else {
       cycleTimer++;
-      if (cycleTimer >= cfg.cyclePause && particles.length < 30) {
+      if (cycleTimer >= CYCLE_PAUSE && particles.length < 30) {
         computeText();
       }
     }
@@ -581,7 +581,7 @@
     if (cfg.fontName) textFont(cfg.fontName);
     else textFont('sans-serif');
 
-    // 1. 未 blown 的字：正常画整字
+    // 1. 未 blown 的字：直接画整字（矢量形态）
     fill(red(c1), green(c1), blue(c1), 0.95);
     for (const ch of chars) {
       if (!ch.blown) {
@@ -589,18 +589,47 @@
       }
     }
 
-    // 2. blown 的字：画未激活的像素（剩余部分，渐进剥离）
-    fill(red(c1), green(c1), blue(c1), 0.92);
-    const ps = pixelStep;
+    // 2. blown 的字：用 glyphPg 画矢量整字 + erase 挖掉已飞走的像素
+    //    关键：保持原字矢量形态，已激活像素位置用 erase() 挖透明，露出下层背景
+    let hasBlownRemain = false;
     for (const ch of chars) {
       if (ch.blown) {
         for (const px of ch.pixels) {
-          if (!px.activated) {
-            rect(px.x, px.y, ps, ps);
+          if (!px.activated) { hasBlownRemain = true; break; }
+        }
+        if (hasBlownRemain) break;
+      }
+    }
+    if (!hasBlownRemain) return;
+
+    glyphPg.clear();
+    glyphPg.noStroke();
+    glyphPg.textAlign(CENTER, CENTER);
+    glyphPg.textStyle(BOLD);
+    glyphPg.textSize(cfg.fontSize);
+    if (cfg.fontName) glyphPg.textFont(cfg.fontName);
+    else glyphPg.textFont('sans-serif');
+    glyphPg.fill(red(c1), green(c1), blue(c1), 0.95);
+    for (const ch of chars) {
+      if (ch.blown) {
+        glyphPg.text(ch.char, ch.cx, ch.cy);
+      }
+    }
+    // erase 挖洞：在已激活（已飞走）的像素位置擦除
+    glyphPg.erase();
+    const half = pixelStep / 2;
+    const er = pixelStep * 0.9;  // 擦除半径，略小于步长避免过度侵蚀相邻未飞像素
+    for (const ch of chars) {
+      if (ch.blown) {
+        for (const px of ch.pixels) {
+          if (px.activated) {
+            glyphPg.circle(px.x + half, px.y + half, er * 2);
           }
         }
       }
     }
+    glyphPg.noErase();
+    image(glyphPg, 0, 0);
   }
 
   function drawParticles() {
@@ -661,7 +690,6 @@
     bindSlider('turbulence', 'turbulence', 'turbulenceVal', v => v.toFixed(1));
     bindSlider('speedVar', 'speedVar', 'speedVarVal', v => v.toFixed(1));
     bindSlider('trail', 'trail', 'trailVal');
-    bindSlider('cyclePause', 'cyclePause', 'cyclePauseVal');
 
     // 风向标
     const windDial = document.getElementById('windDial');
