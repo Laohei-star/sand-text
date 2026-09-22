@@ -197,6 +197,7 @@
       <button class="save-btn" id="saveBtn">保存PNG</button>
       <button class="action-btn" id="blowAllBtn">全部消散</button>
       <button class="action-btn" id="resetBtn">重新开始</button>
+      <button class="action-btn" id="resetCfgBtn">重置设置</button>
     </div>
   </div>
 
@@ -254,6 +255,151 @@
     bg: presets.feixue.bg
   };
 
+  /* ===== localStorage persistence ===== */
+  const LS_PREFIX = 'dissolve_';
+  const FONT_DATA_KEY = 'fontDataUrl';
+  const FONT_NAME_KEY = 'fontFamily';
+  const PERSIST_KEYS = ['text','fontSize','windAngle','windPower','particleSize','density','turbulence','speedVar','trail','mono','c1','c2','bg'];
+
+  function persistCfg(key, value) {
+    try { localStorage.setItem(LS_PREFIX + key, String(value)); } catch(e) {}
+  }
+
+  function syncUIFromCfg() {
+    const textInput = document.getElementById('textInput');
+    if (textInput) textInput.value = cfg.text;
+
+    const sliderMap = [
+      { id: 'fontSize',       valId: 'fontSizeVal',       fmt: v => v },
+      { id: 'windPower',      valId: 'windPowerVal',      fmt: v => v.toFixed(1) },
+      { id: 'particleSize',   valId: 'particleSizeVal',   fmt: v => v.toFixed(1) },
+      { id: 'density',        valId: 'densityVal',        fmt: v => v },
+      { id: 'turbulence',     valId: 'turbulenceVal',     fmt: v => v.toFixed(1) },
+      { id: 'speedVar',       valId: 'speedVarVal',       fmt: v => v.toFixed(1) },
+      { id: 'trail',          valId: 'trailVal',          fmt: v => v }
+    ];
+    for (const s of sliderMap) {
+      const el = document.getElementById(s.id);
+      const valEl = document.getElementById(s.valId);
+      if (el) el.value = cfg[s.id];
+      if (valEl) valEl.textContent = s.fmt(cfg[s.id]);
+    }
+
+    // wind dial
+    const dialNeedle = document.getElementById('dialNeedle');
+    if (dialNeedle) {
+      dialNeedle.style.transform = `rotate(${cfg.windAngle}deg)`;
+      const dirNames = ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE'];
+      const norm = ((cfg.windAngle % 360) + 360) % 360;
+      const dirIdx = Math.round(norm / 45) % 8;
+      const windAngleVal = document.getElementById('windAngleVal');
+      if (windAngleVal) windAngleVal.textContent = Math.round(norm) + '° ' + dirNames[dirIdx];
+    }
+
+    // mono switch
+    const monoSwitch = document.getElementById('monoSwitch');
+    if (monoSwitch) monoSwitch.classList.toggle('on', cfg.mono);
+
+    // color pickers
+    const c1Pick = document.getElementById('c1Pick');
+    if (c1Pick) c1Pick.value = cfg.c1;
+    const c2Pick = document.getElementById('c2Pick');
+    if (c2Pick) c2Pick.value = cfg.c2;
+    const bgPick = document.getElementById('bgPick');
+    if (bgPick) bgPick.value = cfg.bg;
+
+    // preset buttons — highlight matching preset
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    for (const [name, p] of Object.entries(presets)) {
+      if (cfg.c1 === p.c1 && cfg.c2 === p.c2 && cfg.bg === p.bg && cfg.mono === p.mono) {
+        const btn = document.querySelector(`.preset-btn[data-preset="${name}"]`);
+        if (btn) btn.classList.add('active');
+        break;
+      }
+    }
+  }
+
+  function restoreCfg() {
+    for (const k of PERSIST_KEYS) {
+      const v = localStorage.getItem(LS_PREFIX + k);
+      if (v === null) continue;
+      if (typeof cfg[k] === 'boolean') cfg[k] = (v === 'true');
+      else if (typeof cfg[k] === 'number') cfg[k] = parseFloat(v);
+      else cfg[k] = v;
+    }
+    syncUIFromCfg();
+  }
+
+  function persistFont(dataUrl, family) {
+    try {
+      localStorage.setItem(LS_PREFIX + FONT_DATA_KEY, dataUrl);
+      localStorage.setItem(LS_PREFIX + FONT_NAME_KEY, family);
+    } catch(e) {}
+  }
+
+  function restoreFont() {
+    try {
+      const dataUrl = localStorage.getItem(LS_PREFIX + FONT_DATA_KEY);
+      const family = localStorage.getItem(LS_PREFIX + FONT_NAME_KEY);
+      if (dataUrl && family) {
+        const fontFace = new FontFace(family, `url(${dataUrl})`);
+        fontFace.load().then((loaded) => {
+          document.fonts.add(loaded);
+          cfg.fontName = family;
+          computeText();
+          background(bgRgb[0], bgRgb[1], bgRgb[2]);
+        }).catch(() => {});
+        return true;
+      }
+    } catch(e) {}
+    return false;
+  }
+
+  function clearPersistedFont() {
+    try {
+      localStorage.removeItem(LS_PREFIX + FONT_DATA_KEY);
+      localStorage.removeItem(LS_PREFIX + FONT_NAME_KEY);
+    } catch(e) {}
+  }
+
+  function resetAllCfg() {
+    // clear every persisted key
+    for (const k of PERSIST_KEYS) {
+      try { localStorage.removeItem(LS_PREFIX + k); } catch(e) {}
+    }
+    clearPersistedFont();
+    // restore defaults
+    cfg.text = 'heip';
+    cfg.fontName = '';
+    cfg.fontSize = 300;
+    cfg.windAngle = 327;
+    cfg.windPower = 4;
+    cfg.particleSize = 1.2;
+    cfg.density = 6;
+    cfg.turbulence = 0.8;
+    cfg.speedVar = 1.0;
+    cfg.trail = 6;
+    cfg.mono = false;
+    cfg.c1 = presets.feixue.c1;
+    cfg.c2 = presets.feixue.c2;
+    cfg.bg = presets.feixue.bg;
+    // sync UI
+    syncUIFromCfg();
+    // clear font file input
+    const fontFileEl = document.getElementById('fontFile');
+    if (fontFileEl) fontFileEl.value = '';
+    // recompute
+    updateColors();
+    updatePixelStep();
+    updateWindVec();
+    computeText();
+    background(bgRgb[0], bgRgb[1], bgRgb[2]);
+  }
+
+  // Restore persisted config as early as possible (before bindUI / setup)
+  restoreCfg();
+  /* ===== /localStorage persistence ===== */
+
   let c1, c2;
   let bgRgb = [3, 0, 20];
   let windVec = { x: 4, y: 0 };
@@ -288,8 +434,10 @@
     glyphPg.colorMode(RGB, 255, 255, 255, 1);  
     updateColors();
     updatePixelStep();
+    updateWindVec();
     textFont('sans-serif');
     computeText();
+    restoreFont();
   }
 
   function draw() {
@@ -671,105 +819,11 @@
   }
 
   
-  
-// ============ 数据持久化 ============
-var LS_PREFIX = 'sand_';
-var LS_IMAGE_MAX = 4 * 1024 * 1024;
-
-function persistCfg(key, value) {
-  try { localStorage.setItem(LS_PREFIX + key, String(value)); }
-  catch (e) { console.warn('[persist] localStorage 写入失败（' + key + '）:', e.message); }
-}
-
-function persistFont(dataUrl, fontName) {
-  if (!dataUrl) return;
-  if (dataUrl.length > LS_IMAGE_MAX) {
-    console.warn('[persist] 字体过大，未存 localStorage');
-    return;
-  }
-  try {
-    localStorage.setItem(LS_PREFIX + 'font', dataUrl);
-    localStorage.setItem(LS_PREFIX + 'fontName', fontName);
-  } catch (e) { console.warn('[persist] 字体存 localStorage 失败:', e.message); }
-}
-function clearPersistedFont() {
-  localStorage.removeItem(LS_PREFIX + 'font');
-  localStorage.removeItem(LS_PREFIX + 'fontName');
-}
-
-function restoreCfg() {
-  var keys = ['text', 'fontName', 'fontSize', 'windAngle', 'windPower', 'particleSize', 'density', 'turbulence', 'speedVar', 'trail', 'mono', 'c1', 'c2', 'bg'];
-  var count = 0;
-  for (var i = 0; i < keys.length; i++) {
-    var k = keys[i];
-    var v = localStorage.getItem(LS_PREFIX + k);
-    if (v === null) continue;
-    if (typeof cfg[k] === 'boolean') cfg[k] = (v === 'true');
-    else if (typeof cfg[k] === 'number') cfg[k] = parseFloat(v);
-    else if (typeof cfg[k] === 'string') cfg[k] = v;
-    count++;
-  }
-  if (count === 0) return false;
-  syncUIFromCfg();
-  console.log('[persist] 还原', count, '个参数');
-  return true;
-}
-
-function syncUIFromCfg() {
-  var $ = function(id) { return document.getElementById(id); };
-  // Sync all range inputs that match cfg keys
-  for (var k in cfg) {
-    var el = $(k);
-    if (el && el.type === 'range') {
-      el.value = cfg[k];
-      // trigger label update
-      if (el.oninput) el.oninput({target: el});
-      else el.dispatchEvent(new Event('input', {bubbles: true}));
-    }
-  }
-  // Sync color inputs
-  for (var k2 in cfg) {
-    var el2 = $(k2);
-    if (el2 && el2.type === 'color') {
-      el2.value = cfg[k2];
-      el2.dispatchEvent(new Event('input', {bubbles: true}));
-    }
-  }
-  // Sync text inputs
-  var ti = $('textInput');
-  if (ti && cfg.text !== undefined) { ti.value = cfg.text; ti.dispatchEvent(new Event('input', {bubbles: true})); }
-  var fn = $('fontName') || $('fontInput');
-  if (fn && cfg.fontName !== undefined) { 
-    if (fn.tagName === 'INPUT') { fn.value = cfg.fontName; }
-  }
-
-}
-
-function restoreFont() {
-  var src = localStorage.getItem(LS_PREFIX + 'font');
-  if (!src) return false;
-  var fname = localStorage.getItem(LS_PREFIX + 'fontName') || 'custom';
-  var face = new FontFace(fname, 'url(' + src + ')');
-  face.load().then(function(f) {
-    document.fonts.add(f);
-    if (typeof cfg !== 'undefined' && cfg.fontName !== undefined) cfg.fontName = fname;
-    var fn = document.getElementById('fontName') || document.getElementById('fontFileName');
-    if (fn) { if (fn.tagName === 'INPUT') fn.value = fname; }
-    console.log('[persist] 还原字体:', fname);
-  }).catch(function(e) {
-    console.warn('[persist] 还原字体失败:', e.message);
-  });
-  return true;
-}
-
-function bindUI() {
-  // 恢复持久化设置
-  try { restoreCfg(); } catch(e) { console.warn('restoreCfg err:', e.message); }
-  try { restoreFont(); } catch(e) {}
-
+  function bindUI() {
     const textInput = document.getElementById('textInput');
     textInput.addEventListener('input', () => {
       cfg.text = textInput.value;
+      persistCfg('text', cfg.text);
       computeText();
       background(bgRgb[0], bgRgb[1], bgRgb[2]);
     });
@@ -785,6 +839,7 @@ function bindUI() {
         fontFace.load().then((loaded) => {
           document.fonts.add(loaded);
           cfg.fontName = family;
+          persistFont(reader.result, family);
           computeText();
           background(bgRgb[0], bgRgb[1], bgRgb[2]);
         });
@@ -797,6 +852,7 @@ function bindUI() {
       const valEl = document.getElementById(valId);
       el.addEventListener('input', () => {
         cfg[key] = parseFloat(el.value);
+        persistCfg(key, cfg[key]);
         valEl.textContent = fmt ? fmt(cfg[key]) : cfg[key];
         if (key === 'fontSize' || key === 'density') {
           if (key === 'density') updatePixelStep();
@@ -822,6 +878,7 @@ function bindUI() {
 
     function setWindAngle(angle) {
       cfg.windAngle = angle;
+      persistCfg('windAngle', cfg.windAngle);
       dialNeedle.style.transform = `rotate(${angle}deg)`;
       const norm = ((angle % 360) + 360) % 360;
       const dirIdx = Math.round(norm / 45) % 8;
@@ -855,6 +912,7 @@ function bindUI() {
         btn.classList.add('active');
         const p = presets[btn.dataset.preset];
         cfg.c1 = p.c1; cfg.c2 = p.c2; cfg.bg = p.bg; cfg.mono = p.mono;
+        persistCfg('c1', cfg.c1); persistCfg('c2', cfg.c2); persistCfg('bg', cfg.bg); persistCfg('mono', cfg.mono);
         document.getElementById('c1Pick').value = p.c1;
         document.getElementById('c2Pick').value = p.c2;
         document.getElementById('bgPick').value = p.bg;
@@ -868,6 +926,7 @@ function bindUI() {
     const monoSwitch = document.getElementById('monoSwitch');
     monoSwitch.addEventListener('click', () => {
       cfg.mono = !cfg.mono;
+      persistCfg('mono', cfg.mono);
       monoSwitch.classList.toggle('on', cfg.mono);
     });
 
@@ -875,6 +934,7 @@ function bindUI() {
     const bindColor = (id, key) => {
       document.getElementById(id).addEventListener('input', (e) => {
         cfg[key] = e.target.value;
+        persistCfg(key, cfg[key]);
         document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
         updateColors();
         background(bgRgb[0], bgRgb[1], bgRgb[2]);
@@ -891,6 +951,9 @@ function bindUI() {
     document.getElementById('resetBtn').addEventListener('click', () => {
       computeText();
       background(bgRgb[0], bgRgb[1], bgRgb[2]);
+    });
+    document.getElementById('resetCfgBtn').addEventListener('click', () => {
+      resetAllCfg();
     });
 
     
@@ -931,6 +994,9 @@ function bindUI() {
       el.addEventListener('pointerenter', () => cursorDot.classList.add('hide'));
       el.addEventListener('pointerleave', () => cursorDot.classList.remove('hide'));
     });
+
+    // Sync all UI controls from restored cfg values
+    syncUIFromCfg();
   }
 
   window.setup = setup;
